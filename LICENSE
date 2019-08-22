@@ -3,6 +3,7 @@ the following licenses (SPDX codes) whichever makes your life easier
 for integration purposes.
 
 Libraries and other code used in this project may have their own licenses!
+(ie, libopencm3 is LGPL... unfortunately)
 
 Copyright: Karl Palsson <karlp@tweak.net.au>, 2019
 
