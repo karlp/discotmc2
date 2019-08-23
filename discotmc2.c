@@ -231,6 +231,17 @@ static enum usbd_request_return_codes usb_funcgen_control_request(usbd_device *u
 		funcgen_buffer(req->wValue, req->wIndex == 1);
 		*len = 0;
 		return USBD_REQ_HANDLED;
+	case UCR_SETUP_TRIANGLE:
+		val = *(uint32_t *)&real[0];
+		freq = val / 1000.0f;
+		val = *(uint32_t *)&real[4];
+		amp = val / 1000.0f;
+		val = *(uint32_t *)&real[8];
+		offset = val / 1000.0f;
+		ER_DPRINTF("do triangle: freq: %f, amp: %f, offset: %f\n", freq, amp, offset);
+		funcgen_triangle(req->wValue, freq, amp, offset);
+		*len = 0;
+		return USBD_REQ_HANDLED;
 
 	default:
 		ER_DPRINTF("unexpected control breq: %x deferring?!\n", req->bRequest);

@@ -62,7 +62,8 @@ extern "C" {
 	/* platform must provide these routines */
 	void funcgen_plat_init(void);
 	void funcgen_plat_timer_setup(int channel, int period_us);
-	void funcgen_plat_dac_setup(int channel);
+	void funcgen_plat_dac_setup(int channel, bool use_dma);
+	void funcgen_plat_dac_setup_triangle(int channel, uint16_t ampl, uint16_t offset);
 	void funcgen_plat_dma_setup(int channel, const uint16_t *wave_table, int wave_table_count);
 	void funcgen_plat_output(int channel, bool enable);
 	void funcgen_plat_buffer(int channel, bool enable);

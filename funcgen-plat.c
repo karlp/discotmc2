@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/dac.h>
@@ -48,7 +49,7 @@ void funcgen_plat_timer_setup(int channel, int period_ns) {
 }
 
 
-void funcgen_plat_dac_setup(int channel) {
+void funcgen_plat_dac_setup(int channel, bool use_dma) {
 	/* Setup the DAC channel 1, with timer 2 as trigger source.
 	 * Assume the DAC has woken up by the time the first transfer occurs */
 	int chan;
@@ -63,8 +64,27 @@ void funcgen_plat_dac_setup(int channel) {
 		break;
 	}
 	dac_trigger_enable(chan);
-	dac_dma_enable(chan);
+	if (use_dma) {
+		dac_dma_enable(chan);
+	}
 	dac_enable(chan);
+}
+
+void funcgen_plat_dac_setup_triangle(int channel, uint16_t ampl, uint16_t offset)
+{
+	switch (channel) {
+	case 1:
+		DAC_CR &= ~((0xf<<DAC_CR_MAMP2_SHIFT) | DAC_CR_WAVE2_DIS);
+		DAC_CR |= ((ampl & 0xf) <<DAC_CR_MAMP2_SHIFT) | DAC_CR_WAVE2_TRI;
+		DAC_DHR12R2 = offset;
+		break;
+	default:
+	case 0:
+		DAC_CR &= ~((0xf<<DAC_CR_MAMP1_SHIFT) | DAC_CR_WAVE1_DIS);
+		DAC_CR |= ((ampl & 0xf) <<DAC_CR_MAMP1_SHIFT) | DAC_CR_WAVE1_TRI;
+		DAC_DHR12R1 = offset;
+		break;
+	}
 }
 
 #if 0

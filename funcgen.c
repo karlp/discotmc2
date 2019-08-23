@@ -78,7 +78,7 @@ void funcgen_sin(int channel, float frequency, float ampl, float offset) {
 	/*+++ hardware setup +++*/
 	funcgen_plat_timer_setup(channel, nanos_per_sample);
 	funcgen_plat_dma_setup(channel, wavedata, dest_len);
-	funcgen_plat_dac_setup(channel);
+	funcgen_plat_dac_setup(channel, true);
 	/*++++++++++++++++++++++*/
 	
         state.outputs[channel]->mode = OUTPUT_MODE_SINE;
@@ -88,6 +88,31 @@ void funcgen_sin(int channel, float frequency, float ampl, float offset) {
 	state.outputs[channel]->offset = offset;
 	/* we're not doing any tricks on variable lengths for better frequency control at the moment */
 	state.outputs[channel]->waveform_length = dest_len;
+}
+
+void funcgen_triangle(int channel, float frequency, float ampl, float offset)
+{
+	float usecs_per_wave = 1000000 / frequency;
+	int nanos_per_sample = 1000 * usecs_per_wave;
+
+	/* You _can_ do triangle much like sine, but we're going
+	 * to defer to the platform's built in triangle generation, if
+	 * for no other reason than to try the feature out. */
+	/* So.... this isn't very useful, the way it works means the
+	 * period is dependent on the amplitude chosen */
+	funcgen_plat_timer_setup(channel, usecs_per_wave);
+	funcgen_plat_dac_setup(channel, false);
+
+	uint16_t amp16 = ampl / FULL_SCALE * 0xf;
+	uint16_t off16 = offset / FULL_SCALE * 4095;
+	printf("Requested triangle: ampls: %x, off16: %x, timer nsecs: %d\n", amp16, off16, nanos_per_sample);
+	funcgen_plat_dac_setup_triangle(channel, amp16, off16);
+
+	state.outputs[channel]->mode = OUTPUT_MODE_TRIANGLE;
+	state.outputs[channel]->enabled = true;
+	state.outputs[channel]->freq = frequency;
+	state.outputs[channel]->ampl = ampl;
+	state.outputs[channel]->offset = offset;
 }
 
 void funcgen_user(int channel, float frequency, float ampl, float offset) {
@@ -101,7 +126,7 @@ void funcgen_user(int channel, float frequency, float ampl, float offset) {
 	/*+++ hardware setup +++*/
 	funcgen_plat_timer_setup(channel, nanos_per_sample);
 	funcgen_plat_dma_setup(channel, wavedata, dest_len);
-	funcgen_plat_dac_setup(channel);
+	funcgen_plat_dac_setup(channel, true);
 	/*++++++++++++++++++++++*/
 
         state.outputs[channel]->mode = OUTPUT_MODE_USER;

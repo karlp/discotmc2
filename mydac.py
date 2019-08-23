@@ -24,6 +24,11 @@ class MyDac(object):
         dat = struct.pack("<III", int(freq * 1000), int(ampl * 1000), int(offset * 1000))
         print(self.dev.ctrl_transfer(self.rt, 1, chan, 0, dat))
 
+    def triangle(self, chan, freq=1000, ampl=0.5, offset=1):
+        sformat = "<III"
+        dat = struct.pack("<III", int(freq * 1000), int(ampl * 1000), int(offset * 1000))
+        print(self.dev.ctrl_transfer(self.rt, 6, chan, 0, dat))
+
     def led(self, on):
         if on:
             self.dev.ctrl_transfer(self.rt, 3, 1, 0)
