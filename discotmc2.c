@@ -24,6 +24,7 @@
 #include "hw.h"
 #include "trace.h"
 
+#include "api-control-reqs.h"
 #include "funcgen.h"
 
 #define ER_DEBUG
@@ -201,7 +202,7 @@ static enum usbd_request_return_codes usb_funcgen_control_request(usbd_device *u
 	float offset;
 	uint32_t val;
 	switch (req->bRequest) {
-	case 1:
+	case UCR_SETUP_SINE:
 		val = *(uint32_t *)&real[0];
 		freq = val / 1000.0f;
 		val = *(uint32_t *)&real[4];
@@ -212,7 +213,7 @@ static enum usbd_request_return_codes usb_funcgen_control_request(usbd_device *u
 		funcgen_sin(req->wValue, freq, amp, offset);
 		*len = 0;
 		return USBD_REQ_HANDLED;
-	case 3:
+	case UCR_SET_LED:
 		if (req->wValue) {
 			gpio_set(hw_details.led_port, hw_details.led_pin);
 		} else {
@@ -220,12 +221,12 @@ static enum usbd_request_return_codes usb_funcgen_control_request(usbd_device *u
 		}
 		*len = 0;
 		return USBD_REQ_HANDLED;
-	case 4:
+	case UCR_SET_OUTPUT:
 		// TODO - could handle these in one req? would it save anything meaningful?
 		funcgen_output(req->wValue, req->wIndex == 1);
 		*len = 0;
 		return USBD_REQ_HANDLED;
-	case 5:
+	case UCR_SET_BUFFER:
 		// Buffer enable
 		funcgen_buffer(req->wValue, req->wIndex == 1);
 		*len = 0;
