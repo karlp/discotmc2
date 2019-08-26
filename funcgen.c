@@ -142,13 +142,42 @@ void funcgen_output(int channel, bool enable)
 {
 	printf("setting channel %d to %s\n", channel, enable ? "ON" : "off");
 	funcgen_plat_output(channel, enable);
-	state.outputs[channel]->enabled = enable;
+	if (channel == 2) {
+		state.outputs[0]->enabled = enable;
+		state.outputs[1]->enabled = enable;
+	} else {
+		state.outputs[channel]->enabled = enable;
+	}
 }
 
 void funcgen_buffer(int channel, bool enable)
 {
 	funcgen_plat_buffer(channel, enable);
 	// FIXME should be in the state object too really.
+}
+
+void funcgen_sync(void)
+{
+	/*
+	 * leave the timers running, but disconnect the triggers while you reset
+	 * the waveforms.
+	 */
+	funcgen_output(2, false);
+	for (int channel = 0; channel < 2; channel++) {
+		funcgen_output(channel, false);
+		uint16_t *wavedata = state.outputs[channel]->waveform;
+		int dest_len = state.outputs[channel]->waveform_length;
+		funcgen_plat_dma_setup(channel, wavedata, dest_len);
+		funcgen_plat_dma_setup(channel, wavedata, dest_len);
+	}
+	/* In theory, if the timers were at different points, they would still
+	 * be somewhat out of sync. (one will trigger a dma request before
+	 * the other) In reality, this doesn't seem to matter,
+	 * but perhaps just not good enough measurement equipment.
+	funcgen_plat_timer_reset(0);
+	funcgen_plat_timer_reset(1);
+	*/
+	funcgen_output(2, true);
 }
 
 

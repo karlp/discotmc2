@@ -243,6 +243,10 @@ static enum usbd_request_return_codes usb_funcgen_control_request(usbd_device *u
 		*len = 0;
 		return USBD_REQ_HANDLED;
 
+	case UCR_SYNC:
+		funcgen_sync();
+		*len = 0;
+		return USBD_REQ_HANDLED;
 	default:
 		ER_DPRINTF("unexpected control breq: %x deferring?!\n", req->bRequest);
 		break;

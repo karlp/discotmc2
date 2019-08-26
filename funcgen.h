@@ -55,6 +55,7 @@ extern "C" {
 	void funcgen_square(int channel, float frequency, float ampl, float offset);
 	void funcgen_triangle(int channel, float frequency, float ampl, float offset);
 	void funcgen_user(int channel, float frequency, float ampl, float offset);
+	void funcgen_sync(void);
 	void funcgen_output(int channel, bool enable);
 	void funcgen_buffer(int channel, bool enable);
 	struct funcgen_state_t * funcgen_getstate(void);
@@ -62,6 +63,8 @@ extern "C" {
 	/* platform must provide these routines */
 	void funcgen_plat_init(void);
 	void funcgen_plat_timer_setup(int channel, int period_us);
+	void funcgen_plat_timer_reset(int channel);
+	void funcgen_plat_timer_start(int channel, uint32_t startval);
 	void funcgen_plat_dac_setup(int channel, bool use_dma);
 	void funcgen_plat_dac_setup_triangle(int channel, uint16_t ampl, uint16_t offset);
 	void funcgen_plat_dma_setup(int channel, const uint16_t *wave_table, int wave_table_count);

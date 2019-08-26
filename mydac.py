@@ -38,6 +38,10 @@ class MyDac(object):
         self.dev.ctrl_transfer(self.rt, 5, 0, a == True)
         self.dev.ctrl_transfer(self.rt, 5, 1, b == True)
 
+    def sync(self):
+        self.dev.ctrl_transfer(self.rt, 7, 0, 0)
+
+
 def test():
     d = MyDac()
     for i in range(20):

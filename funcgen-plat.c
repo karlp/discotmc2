@@ -12,6 +12,26 @@
 #define TIMER_DAC1_ISR		tim6_isr
 #define TIMER_DAC1_NVIC		NVIC_TIM6_IRQ
 
+struct timer_detail {
+	uint32_t timer;
+	uint32_t timer_rst;
+};
+
+static void funcgen_get_td(int channel, struct timer_detail *td)
+{
+	switch (channel) {
+	case 1:
+		td->timer = TIM7;
+		td->timer_rst = RST_TIM7;
+		break;
+	case 0:
+	default:
+		td->timer = TIM6;
+		td->timer_rst = RST_TIM6;
+		break;
+	}
+}
+
 
 void funcgen_plat_timer_setup(int channel, int period_ns) {
 	uint32_t timer;
@@ -97,6 +117,13 @@ void TIMER_DAC1_ISR(void) {
 
 void funcgen_plat_output(int channel, bool enable) {
 	switch (channel) {
+	case 2:
+		if (enable) {
+			DAC_CR |= DAC_CR_DMAEN1 | DAC_CR_DMAEN2 | DAC_CR_TEN1 | DAC_CR_TEN2 | DAC_CR_EN1 | DAC_CR_EN2;
+		} else {
+			DAC_CR &= ~(DAC_CR_DMAEN1 | DAC_CR_DMAEN2 | DAC_CR_TEN1 | DAC_CR_TEN2 | DAC_CR_EN1 | DAC_CR_EN2);
+		}
+		break;
 	case 1: if (enable) {
 			dac_enable(CHANNEL_2);
 		} else {
@@ -104,7 +131,6 @@ void funcgen_plat_output(int channel, bool enable) {
 		}
 		break;
 	case 0:
-	default:
 		if (enable) {
 			dac_enable(CHANNEL_1);
 		} else {
@@ -141,4 +167,19 @@ void funcgen_plat_buffer(int channel, bool enable)
 	} else {
 		dac_buffer_disable(channel);
 	}
+}
+
+void funcgen_plat_timer_reset(int channel)
+{
+	struct timer_detail td;
+	funcgen_get_td(channel, &td);
+	timer_set_counter(td.timer, 0);
+}
+
+void funcgen_plat_timer_start(int channel, uint32_t start)
+{
+	struct timer_detail td;
+	funcgen_get_td(channel, &td);
+	timer_set_counter(td.timer, start);
+	timer_enable_counter(td.timer);
 }
