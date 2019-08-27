@@ -27,9 +27,9 @@ CFILES += trace.c trace_stdio.c
 #CFILES += usart_stdio.c
 
 OPENCM3_DIR = libs/libopencm3
-#DEVICE = stm32l151x8x_a
-DEVICE = stm32l151x6
-#OOCD_FILE = openocd.stm32l1-generic.cfg
-OOCD_FILE = board/stm32ldiscovery.cfg
+DEVICE = stm32l151x8x_a
+#DEVICE = stm32l151x6
+OOCD_FILE = openocd.stm32l1-generic.cfg
+#OOCD_FILE = board/stm32ldiscovery.cfg
 
 include rules.mk

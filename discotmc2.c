@@ -379,8 +379,8 @@ int main(void)
 	};
 
 	// TODO - properly use board/hw support! duh
-	//rcc_clock_setup_pll(&myclock_locm3_hw1);
-	rcc_clock_setup_pll(&myclock_purple_faker);
+	rcc_clock_setup_pll(&myclock_locm3_hw1);
+	//rcc_clock_setup_pll(&myclock_purple_faker);
 	hw_init();
 	setup_usart();
 	printf("starting freertos...\n");
