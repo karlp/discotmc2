@@ -1,0 +1,15 @@
+# py venvs
+.env
+.env3
+.venv
+.venv3
+__pycache__
+
+# generated files
+generated.*
+*.elf
+bin/
+swodump.*
+
+# project files
+nbproject/
