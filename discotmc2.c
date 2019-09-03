@@ -120,7 +120,7 @@ static const struct usb_endpoint_descriptor endp_bulk[] = {
 	},
 };
 
-static const struct usb_interface_descriptor iface_sourcesink[] = {
+static const struct usb_interface_descriptor iface_discotmc[] = {
 	{
 		.bLength = USB_DT_INTERFACE_SIZE,
 		.bDescriptorType = USB_DT_INTERFACE,
@@ -133,10 +133,10 @@ static const struct usb_interface_descriptor iface_sourcesink[] = {
 	}
 };
 
-static const struct usb_interface ifaces_sourcesink[] = {
+static const struct usb_interface ifaces_discotmc[] = {
 	{
 		.num_altsetting = 1,
-		.altsetting = iface_sourcesink,
+		.altsetting = iface_discotmc,
 	}
 };
 
@@ -150,7 +150,7 @@ static const struct usb_config_descriptor config[] = {
 		.iConfiguration = 4, /* string index */
 		.bmAttributes = 0x80,
 		.bMaxPower = 0x32,
-		.interface = ifaces_sourcesink,
+		.interface = ifaces_discotmc,
 	},
 };
 
@@ -159,7 +159,7 @@ static const char *usb_strings[] = {
 	"karlp-cafe",
 	"discotmc2",
 	serial,
-	"source and sink data",
+	"dac interface",
 };
 
 /* Buffer to be used for control requests. */
