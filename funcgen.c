@@ -115,9 +115,29 @@ void funcgen_triangle(int channel, float frequency, float ampl, float offset)
 	state.outputs[channel]->offset = offset;
 }
 
+void funcgen_prepare_udata(int channel, int data_len)
+{
+	state.outputs[channel]->waveform_length = data_len;
+}
+
+void funcgen_set_udata(int channel, int offset, uint16_t *data, int len)
+{
+	uint16_t *dst = &state.outputs[channel]->waveform[offset];
+	// no need for freq, that comes in the other channel, set udata is jsut for filling the buffer (need both expected, offset, and remaining, anddddd freq!)
+	// but need to carefully fix length of full sample set
+	for (int i = 0; i < len; i++) {
+		dst[i] = data[i];
+	}
+}
+
 void funcgen_user(int channel, float frequency, float ampl, float offset) {
         uint16_t *wavedata = state.outputs[channel]->waveform;
 	int dest_len = state.outputs[channel]->waveform_length;
+
+	/*
+	 * user is actually simpler. we have a sample count, and a target freq.
+	 * we therefore have 1/f / n seconds per sample.
+	 */
 
 	float usecs_per_wave = 1000000 / frequency;
 	int nanos_per_sample = ceil(1000 * usecs_per_wave / (dest_len * 1.0));

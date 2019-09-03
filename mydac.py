@@ -29,6 +29,15 @@ class MyDac(object):
         dat = struct.pack("<III", int(freq * 1000), int(ampl * 1000), int(offset * 1000))
         print(self.dev.ctrl_transfer(self.rt, 6, chan, 0, dat))
 
+    def user_setup(self, chan, samps):
+        """This just sets up wavetables, frequency is separate"""
+        print(self.dev.ctrl_transfer(self.rt, 8, chan, 0, struct.pack("<I", len(samps))))
+        print(self.dev.write(1, struct.pack("<%dh" % len(samps), *samps)))
+
+    def user(self, chan, freq=1000):
+        dat = struct.pack("<I", int(freq * 1000))
+        print(self.dev.ctrl_transfer(self.rt, 9, chan, 0, dat))
+
     def led(self, on):
         if on:
             self.dev.ctrl_transfer(self.rt, 3, 1, 0)
@@ -53,7 +62,8 @@ def test():
 def test2():
     d = MyDac()
     d.sin(0, 500, 1, 0.5)
-    d.sin(1, 750, 0.2, 1.5)
+    d.user_setup(1, [200,400,100,400,600,400,200,250,250,250,800,400,300,250])
+    d.user(1, 750)
         
 if __name__ == "__main__":
     test2()

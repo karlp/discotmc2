@@ -44,6 +44,15 @@ struct hw_detail hw_details = {
 	.led_pin = GPIO1,
 };
 
+/* this is ... rough. we're just doing . something, until we know what we really might want here.
+ */
+struct runstate {
+	int state; /* um, some statemachine enum ?*/
+	int arg_a; /* primary integer argument for a state.  fuck unions */
+	int arg_b; /* secondary integer argument */
+	int rx_ptr; /* a pointer for use in streamed receive, if desired */
+} runstate;
+
 /* provided in board files please*/
 /**
  * Setup any gpios or anything hardware specific.
@@ -168,10 +177,34 @@ static uint8_t usbd_control_buffer[3*BULK_EP_MAXPACKET];
 /* We don't actually do anything with the bulk endpoints (yet?)*/
 static void usb_funcgen_out_cb(usbd_device *usbd_dev, uint8_t ep)
 {
-	(void) usbd_dev;
-	(void) ep;
-	//uint16_t x;
-	//x = usbd_ep_read_packet(usbd_dev, ep, dest, BULK_EP_MAXPACKET);
+	if (runstate.state != UCR_PREPARE_USER) {
+		ER_DPRINTF("out bulk without being in an expected state?!\n");
+	}
+	/* We _could_ go all abstract and queue data here for a task consumer,
+	 * but no, that would be a tonne of copying around for no great reason
+	 * instead, just use the metadata from the control transfer "header"
+	 * and "do the right thing".  (relies on co-operative hosts, no
+	 * defense from fuzzing here)
+	 */
+	uint16_t x;
+	uint16_t buf[BULK_EP_MAXPACKET];
+	/*
+	 * If we setup the internal apis better, we could be _could_ be
+	 * reading directly into the funcgen wavetable, but we might overrun,
+	 *  and we break layering...
+	 */
+	x = usbd_ep_read_packet(usbd_dev, ep, buf, BULK_EP_MAXPACKET);
+	ER_DPRINTF("Swallowed %d bytes of out data\n", x);
+	funcgen_set_udata(runstate.arg_a, runstate.rx_ptr, (uint16_t*)buf, x/2);
+	runstate.rx_ptr += x/2;
+
+	if (runstate.rx_ptr == runstate.arg_b) {
+		ER_DPRINTF("GOOD; got all data, resetting\n");
+		runstate.state = 0;
+	} else if (runstate.rx_ptr > runstate.arg_b) {
+		ER_DPRINTF("rx ptr _>_ expected output data?! back to dummy handler\n");
+		runstate.state = 0;
+	}
 }
 
 static void usb_funcgen_in_cb(usbd_device *usbd_dev, uint8_t ep)
@@ -179,6 +212,7 @@ static void usb_funcgen_in_cb(usbd_device *usbd_dev, uint8_t ep)
 	(void) usbd_dev;
 	(void) ep;
 	//uint16_t x = usbd_ep_write_packet(usbd_dev, ep, src, BULK_EP_MAXPACKET);
+	/* TODO - if they sent the right control req first, we could read out a wavetable here. */
 }
 
 
@@ -247,6 +281,26 @@ static enum usbd_request_return_codes usb_funcgen_control_request(usbd_device *u
 		funcgen_sync();
 		*len = 0;
 		return USBD_REQ_HANDLED;
+
+	case UCR_PREPARE_USER:
+		/* channel from wvalue, length to expect in data */
+		runstate.state = UCR_PREPARE_USER; /* hoho, resuing enums! bad boi */
+		runstate.arg_a = req->wValue;
+		runstate.arg_b = *(uint32_t *)&real[0];
+		runstate.rx_ptr = 0;
+		funcgen_prepare_udata(runstate.arg_a, runstate.arg_b);
+		ER_DPRINTF("Preparing statemachine to receive %d for chan %d\n", runstate.arg_b, runstate.arg_a);
+		*len = 0;
+		return USBD_REQ_HANDLED;
+	case UCR_SETUP_USER:
+		val = *(uint32_t *)&real[0];
+		freq = val / 1000.0f;
+		ER_DPRINTF("do user: freq: %f\n", freq);
+		funcgen_user(req->wValue, freq, 0, 0);
+		*len = 0;
+		return USBD_REQ_HANDLED;
+
+
 	default:
 		ER_DPRINTF("unexpected control breq: %x deferring?!\n", req->bRequest);
 		break;
@@ -276,6 +330,12 @@ static void usb_funcgen_set_config(usbd_device *usbd_dev, uint16_t wValue)
 
 
 /* See libopencm3-tests/tests/freertos-gadget-zero as a standalone project */
+/**
+ * Simply manage the usb internal driver statemachine.
+ * The preamble is ~device specific setup, but it's all boiler plate
+ * No application code here.
+ * @param pvParameters
+ */
 static void prvTaskUSBD(void *pvParameters)
 {
 	(void)pvParameters;

@@ -10,4 +10,6 @@ enum discotmc2_usb_ctrl_reqs {
 	UCR_SET_BUFFER = 5,
 	UCR_SETUP_TRIANGLE = 6,
 	UCR_SYNC = 7,
+	UCR_PREPARE_USER = 8,
+	UCR_SETUP_USER = 9,
 };

@@ -59,6 +59,8 @@ extern "C" {
 	void funcgen_output(int channel, bool enable);
 	void funcgen_buffer(int channel, bool enable);
 	struct funcgen_state_t * funcgen_getstate(void);
+	void funcgen_prepare_udata(int channel, int data_len);
+	void funcgen_set_udata(int channel, int offset, uint16_t *data, int len);
 
 	/* platform must provide these routines */
 	void funcgen_plat_init(void);
